@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ playlist.name }} | Playlist Studio{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'playlists:home' %}">← All playlists</a>
+<div class="detail-header">
+  <div><p class="eyebrow">PLAYLIST</p><h1>{{ playlist.name }}</h1><p class="muted">{{ songs|length }} song{{ songs|length|pluralize }}</p></div>
+  <div class="detail-actions"><button class="button secondary-button" id="edit-toggle" type="button">{% if edit_mode %}Done editing{% else %}Edit playlist{% endif %}</button>{% if songs %}<div class="player-note">Select a song below to play it in YouTube.</div>{% endif %}</div>
+</div>
+
+<section class="panel add-panel" id="edit-panel"{% if not edit_mode %} hidden{% endif %}>
+  <div><h2>Add to this playlist</h2><p>Search YouTube or paste a direct video link.</p></div>
+  <div class="playlist-management">
+    <form method="post" action="{% url 'playlists:rename_playlist' playlist.id %}" class="rename-form">
+      {% csrf_token %}{{ rename_form.name }}<button class="button secondary-button" type="submit">Rename</button>
+      {% if rename_form.name.errors %}<div class="field-error">{{ rename_form.name.errors|striptags }}</div>{% endif %}
+    </form>
+    <form method="post" action="{% url 'playlists:delete_playlist' playlist.id %}" onsubmit="return confirm('Delete this playlist and all of its saved songs?');">
+      {% csrf_token %}<button class="danger-button" type="submit">Delete playlist</button>
+    </form>
+  </div>
+  <form class="playlist-search-form" method="get" action="{% url 'playlists:detail' playlist.id %}" autocomplete="off" novalidate>
+    {{ search_form.query }}<button class="button" type="submit">Search YouTube</button>
+    {% if search_form.query.errors %}<div class="field-error">Enter a search term.</div>{% endif %}
+  </form>
+  {% if search_error %}<div class="message error">{{ search_error }}</div>{% endif %}
+  {% if search_results %}
+    <div class="inline-results">
+      {% for video in search_results %}
+        <article class="result-card"><img src="{{ video.thumbnail_url }}" alt="" class="result-thumbnail"><div class="song-info"><strong>{{ video.title }}</strong><small>{{ video.channel_name }}</small></div><form method="post" action="{% url 'playlists:add_search_result' %}">{% csrf_token %}<input type="hidden" name="playlist_id" value="{{ playlist.id }}">{% for key, value in video.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}<button class="button" type="submit">Add</button></form></article>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <div class="paste-divider"><span>or paste a link</span></div>
+  <form method="post" action="{% url 'playlists:add_song' playlist.id %}">
+    {% csrf_token %}
+    <div class="input-row">{{ link_form.url }}<button class="button" type="submit">Add video</button></div>
+    {% if link_form.url.errors %}<div class="field-error">{{ link_form.url.errors|striptags }}</div>{% endif %}
+  </form>
+</section>
+
+{% if songs %}
+  <section class="player-panel">
+    <div class="player-frame"><iframe id="youtube-player" src="https://www.youtube.com/embed/{{ selected_song.song.video_id }}?enablejsapi=1&amp;origin={{ embed_origin|urlencode }}" title="{{ selected_song.song.title }}" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+    <div class="now-playing"><span class="eyebrow">NOW PLAYING</span><strong id="now-playing-title">{{ selected_song.song.title }}</strong><small id="now-playing-channel">{{ selected_song.song.channel_name|default:'YouTube' }}</small><div class="playback-controls"><button class="control-button" id="shuffle-toggle" type="button" aria-pressed="false">Shuffle</button><button class="control-button" id="repeat-toggle" type="button" aria-pressed="false">Repeat playlist</button></div></div>
+  </section>
+  <section class="song-list">
+    <div class="section-heading"><h2>Queue</h2><span class="reorder-help" hidden>Drag to reorder</span></div>
+    {% for playlist_song in songs %}
+      <article class="song-row" draggable="false" data-song-id="{{ playlist_song.id }}" data-video-id="{{ playlist_song.song.video_id }}" data-title="{{ playlist_song.song.title }}" data-channel="{{ playlist_song.song.channel_name|default:'YouTube' }}">
+        <span class="drag-handle" hidden>⠿</span>
+        <a href="?song={{ playlist_song.song.video_id }}"><img src="{{ playlist_song.song.thumbnail_url }}" alt="" class="thumbnail"></a>
+        <div class="song-info"><strong>{{ playlist_song.song.title }}</strong><small>{{ playlist_song.song.channel_name|default:'YouTube video' }}</small></div>
+        <a class="play-link" href="https://www.youtube.com/watch?v={{ playlist_song.song.video_id }}" target="_blank" rel="noopener">Play on YouTube ↗</a>
+        <form class="remove-song-form" method="post" action="{% url 'playlists:remove_song' playlist.id playlist_song.id %}" hidden>
+          {% csrf_token %}<button class="icon-button" title="Remove video" type="submit">×</button>
+        </form>
+      </article>
+    {% endfor %}
+  </section>
+{% else %}
+  <div class="empty-state"><span class="empty-icon">♫</span><p>Your playlist is empty. Paste a YouTube link above to add the first video.</p></div>
+{% endif %}
+<script src="{% static 'playlists/playlist.js' %}"></script>
+{% endblock %}

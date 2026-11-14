@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Search YouTube | Playlist Studio{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'playlists:home' %}">← Your playlists</a>
+<section class="hero search-hero"><p class="eyebrow">YOUTUBE SEARCH</p><h1>Find your next song.</h1><p class="intro">Search YouTube, then choose which local playlist should get the video.</p></section>
+<form class="search-form" method="get" autocomplete="off" novalidate>{{ form.query }}<button class="button" type="submit">Search</button></form>
+{% if api_error %}<div class="message error">{{ api_error }}</div>{% endif %}
+{% if results %}
+  <section class="results"><div class="section-heading"><h2>Results</h2><span>{{ results|length }} found</span></div>
+  {% for video in results %}<article class="result-card"><img src="{{ video.thumbnail_url }}" alt="" class="result-thumbnail"><div class="song-info"><strong>{{ video.title }}</strong><small>{{ video.channel_name }}</small></div><form method="post" action="{% url 'playlists:add_search_result' %}">{% csrf_token %}{% for key, value in video.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}<button class="button" type="submit">Add to playlist</button></form></article>{% endfor %}
+  </section>
+{% elif form.is_bound and not api_error %}<div class="empty-state"><p>No videos matched that search.</p></div>{% endif %}
+{% endblock %}

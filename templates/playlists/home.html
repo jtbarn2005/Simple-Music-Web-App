@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Your Playlists | Playlist Studio{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">LOCAL MUSIC LIBRARY</p>
+  <h1>Build the perfect queue.</h1>
+  <p class="intro">Create playlists on your computer, then add YouTube videos to keep your favorite music in one place.</p>
+</section>
+
+<section class="panel create-panel">
+  <div>
+    <h2>Create a playlist</h2>
+    <p>Start with a name and add songs from YouTube.</p>
+  </div>
+  <form method="post" action="{% url 'playlists:create_playlist' %}" class="inline-form">
+    {% csrf_token %}
+    {{ playlist_form.name }}
+    {% if playlist_form.name.errors %}<div class="field-error">{{ playlist_form.name.errors|striptags }}</div>{% endif %}
+    <button class="button" type="submit">Create playlist</button>
+  </form>
+</section>
+
+<section>
+  <div class="section-heading"><h2>Your playlists</h2><span>{{ playlists|length }} total</span></div>
+  {% if playlists %}
+    <div class="playlist-grid">
+      {% for playlist in playlists %}
+        <a class="playlist-card" href="{% url 'playlists:detail' playlist.id %}">
+          <span class="card-icon">♪</span>
+          <span><strong>{{ playlist.name }}</strong><small>{{ playlist.playlist_songs.count }} song{{ playlist.playlist_songs.count|pluralize }}</small></span>
+          <span class="arrow">→</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state"><span class="empty-icon">♫</span><p>No playlists yet. Create your first one above.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

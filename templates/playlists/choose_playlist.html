@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Choose Playlist | Playlist Studio{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'playlists:search' %}">← Back to search</a>
+<section class="hero compact-hero"><p class="eyebrow">ADD TO PLAYLIST</p><h1>Where should this go?</h1><p class="intro">Choose the local playlist for “{{ video.title }}”.</p></section>
+<form class="panel choice-panel" method="post" action="{% url 'playlists:add_search_result' %}">{% csrf_token %}{% for key, value in video.items %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}{{ choice_form.playlist }}<button class="button" type="submit">Add video</button></form>
+{% endblock %}
