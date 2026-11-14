@@ -47,8 +47,6 @@ I found these websites useful in developing this software:
 The following items I plan to fix, improve, and/or add to this project in the future:
 
 * [ ] Add automated tests for playlist creation, validation, search, and reordering.
-* [x] Add playlist renaming and deletion.
-* [x] Add shuffle and repeat playback controls.
 * [ ] Add import and export for local playlists.
 * [ ] Improve mobile layout and accessibility.
 * [ ] Add a clearer loading state for YouTube searches.
